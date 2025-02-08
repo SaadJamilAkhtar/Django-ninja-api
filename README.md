@@ -1,4 +1,4 @@
-# Django Ninja API - Production Ready 🚀
+# Django Ninja API
 
 This is a **fully functional Django Ninja API** built with:
 
