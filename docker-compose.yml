@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: django_ninja_api
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+                   python manage.py migrate &&
+                   gunicorn --bind 0.0.0.0:8000 djangoNinja.wsgi:application"
+    volumes:
+      - .:/app
+    ports:
+      - "8001:8000"
+    depends_on:
+      - db
+      - redis
+      - celery
+    env_file:
+      - .env
+
+  db:
+    image: postgres
+    container_name: postgres_db_ninja
+    restart: always
+    environment:
+      POSTGRES_DB: ninja_db
+      POSTGRES_USER: ninja_user
+      POSTGRES_PASSWORD: ninja_password
+    ports:
+      - "9000:5432"
+
+  redis:
+    image: redis
+    container_name: redis_cache
+    restart: always
+    ports:
+      - "9001:6379"
+
+  celery:
+    build: .
+    container_name: celery_worker
+    command: [ "celery", "-A", "djangoNinja", "worker", "--loglevel=info" ]
+    depends_on:
+      - redis
+      - db
+    environment:
+      - DJANGO_SETTINGS_MODULE=djangoNinja.settings
+      - CELERY_BROKER_URL=redis://redis:6379/0
